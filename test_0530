@@ -1,0 +1,64 @@
+
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class DataService {
+  private messageSource = new BehaviorSubject<string>('default message');
+  currentMessage = this.messageSource.asObservable();
+
+  constructor() { }
+
+  changeMessage(message: string) {
+    this.messageSource.next(message);
+  }
+}
+
+//送信側
+import { Component } from '@angular/core';
+import { DataService } from '../data.service';
+
+@Component({
+  selector: 'app-sender',
+  template: `
+    <div>
+      <input #messageInput type="text" placeholder="Enter message">
+      <button (click)="sendMessage(messageInput.value)">Send</button>
+    </div>
+  `
+})
+export class SenderComponent {
+  constructor(private dataService: DataService) { }
+
+  sendMessage(message: string) {
+    this.dataService.changeMessage(message);
+    console.log(`SenderComponent: sendMessage to ${message}`);
+  }
+}
+
+//受信側
+import { Component, OnInit } from '@angular/core';
+import { DataService } from '../data.service';
+
+@Component({
+  selector: 'app-receiver',
+  template: `
+    <div>
+      <p>Message: {{message}}</p>
+    </div>
+  `
+})
+export class ReceiverComponent implements OnInit {
+  message: string;
+
+  constructor(private dataService: DataService) { }
+
+  ngOnInit() {
+    this.dataService.currentMessage.subscribe(message => {
+      this.message = message;
+      console.log(`ReceiverComponent: new message received ${message}`);
+    });
+  }
+}
